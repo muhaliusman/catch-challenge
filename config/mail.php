@@ -107,4 +107,13 @@ return [
         ],
     ],
 
+    /**
+     * Mailtrap token for test
+     */
+    'mailtrap_api_token' => env('MAILTRAP_API_TOKEN', 'aa48389f0958e3276b07641ede47b854'),
+
+    /**
+     * Mailtrap ibox id
+     */
+    'mailtrap_inbox_id' => env('MAILTRAP_INBOX_ID', '181602')
 ];
