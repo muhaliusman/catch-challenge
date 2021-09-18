@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+Route::redirect('/', 'item-order');
+
+Route::group(['prefix' => 'item-order', 'as' => 'item-order.'], function ($route) {
+    $route->get('/', 'ItemOrderController@index')->name('index');
+    $route->post('generate-csv', 'ItemOrderController@generateCsv')->name('generate-csv');
+    $route->get('{id}/download-csv', 'ItemOrderController@downloadCsv')->name('download-csv');
 });
