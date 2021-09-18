@@ -226,7 +226,11 @@ return [
         'URL' => Illuminate\Support\Facades\URL::class,
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
-
     ],
+
+    /**
+     * URL to download file order
+     */
+    'file_order_url' => env('FILE_ORDER_URL', 'https://s3-ap-southeast-2.amazonaws.com/catch-code-challenge/challenge-1-in.jsonl')
 
 ];
