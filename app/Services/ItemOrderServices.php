@@ -15,17 +15,32 @@ class ItemOrderServices
     /**
      * @var string
      */
+    protected $csvFilename;
+
+    /**
+     * @var string
+     */
     protected $fileUrl;
 
     /**
      * @var string
      */
-    protected $folderName;
+    protected $folderName = 'item_order';
+
+    /**
+     * @var string
+     */
+    protected $csvFolderName = 'item_order_csv';
 
     /**
      * @var string
      */
     protected $fullPath;
+
+    /**
+     * @var string
+     */
+    protected $fullPathCsv;
 
     /**
      * Constructor
@@ -34,8 +49,9 @@ class ItemOrderServices
     {
         $this->filename = basename(config('app.file_order_url'));
         $this->fileUrl = config('app.file_order_url');
-        $this->folderName = 'item_order';
         $this->fullPath = storage_path('app/' . $this->folderName . '/' . $this->filename);
+        $this->csvFilename = strtotime(now()) . '_result.csv';
+        $this->fullPathCsv = storage_path('app/' . $this->csvFolderName . '/' . $this->csvFilename);
         $this->downloadFile();
     }
 
@@ -62,7 +78,7 @@ class ItemOrderServices
     public function generateCsv()
     {
         return (new FastExcel($this->fileGenerator()))
-            ->export('result.csv');
+            ->export($this->fullPathCsv);
     }
 
     /**
