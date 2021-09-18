@@ -48,6 +48,11 @@ class ItemOrderServices
     protected $customerAddresses = [];
 
     /**
+     * @var string
+     */
+    protected $error = "";
+
+    /**
      * Constructor
      */
     public function __construct()
@@ -57,7 +62,6 @@ class ItemOrderServices
         $this->fullPath = storage_path('app/' . $this->folderName . '/' . $this->filename);
         $this->csvFilename = strtotime(now()) . '_result.csv';
         $this->fullPathCsv = storage_path('app/' . $this->csvFolderName . '/' . $this->csvFilename);
-        $this->downloadFile();
     }
 
     /**
@@ -67,11 +71,17 @@ class ItemOrderServices
      */
     private function downloadFile()
     {
-        if (!Storage::exists($this->folderName)) {
-            Storage::makeDirectory($this->folderName);
-        }
+        try {
+            if (!Storage::exists($this->folderName)) {
+                Storage::makeDirectory($this->folderName);
+            }
 
-        return copy($this->fileUrl, $this->fullPath);
+            return copy($this->fileUrl, $this->fullPath);
+        } catch (\Throwable $th) {
+            $this->error = $th->getMessage();
+
+            return false;
+        }
     }
 
     /**
@@ -82,8 +92,16 @@ class ItemOrderServices
      */
     public function generateCsv()
     {
-        return (new FastExcel($this->fileGenerator()))
-            ->export($this->fullPathCsv);
+        if ($this->downloadFile()) {
+            $path = (new FastExcel($this->fileGenerator()))
+                ->export($this->fullPathCsv);
+
+            if (!$this->error) {
+                return $path;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -107,6 +125,16 @@ class ItemOrderServices
     }
 
     /**
+     * Geter error
+     *
+     * @return string
+     */
+    public function getErrorMessage()
+    {
+        return $this->error;
+    }
+
+    /**
      * File generator
      *
      * @return mixed
@@ -119,27 +147,58 @@ class ItemOrderServices
             return false;
         }
 
-        while (($line = fgets($content)) !== false) {
-            $jsonRow = json_decode($line);
-            $orderVal = $this->generateOrderValue($jsonRow->items, $jsonRow->discounts);
-            if ($orderVal['total_order_value'] > 0) {
-                $csvData = collect([
-                    'order_id' => $jsonRow->order_id,
-                    'order_datetime' => date('c', strtotime($jsonRow->order_date)),
-                    'total_order_value' => $orderVal['total_order_value'],
-                    'average_unit_price' => $orderVal['average_unit_price'],
-                    'distinct_unit_count' => $orderVal['distinct_unit_count'],
-                    'total_units_count' => $orderVal['total_units_count'],
-                    'customer_state' => $jsonRow->customer->shipping_address->state
-                ]);
+        try {
+            while (($line = fgets($content)) !== false) {
+                $jsonRow = json_decode($line);
+                if ($this->validateJsonRow($jsonRow)) {
+                    $orderVal = $this->generateOrderValue($jsonRow->items, $jsonRow->discounts);
+                    if ($orderVal['total_order_value'] > 0) {
+                        $csvData = collect([
+                            'order_id' => $jsonRow->order_id,
+                            'order_datetime' => date('c', strtotime($jsonRow->order_date)),
+                            'total_order_value' => $orderVal['total_order_value'],
+                            'average_unit_price' => $orderVal['average_unit_price'],
+                            'distinct_unit_count' => $orderVal['distinct_unit_count'],
+                            'total_units_count' => $orderVal['total_units_count'],
+                            'customer_state' => $jsonRow->customer->shipping_address->state
+                        ]);
 
-                $this->customerAddresses[] = $jsonRow->customer->shipping_address->street . ', ' .
-                    $jsonRow->customer->shipping_address->suburb . ', ' .
-                    $jsonRow->customer->shipping_address->state;
+                        if (
+                            isset($jsonRow->customer->shipping_address->street) &&
+                            isset($jsonRow->customer->shipping_address->suburb) &&
+                            isset($jsonRow->customer->shipping_address->state)
+                        ) {
+                            $this->customerAddresses[] = $jsonRow->customer->shipping_address->street . ', ' .
+                            $jsonRow->customer->shipping_address->suburb . ', ' .
+                            $jsonRow->customer->shipping_address->state;
+                        }
 
-                yield $csvData;
+                        yield $csvData;
+                    }
+                } else {
+                    $this->error = 'Json file not valid';
+                }
             }
+        } catch(\Exception $e) {
+           $this->error = $e->getMessage();
+        } finally {
+           fclose($content);
         }
+    }
+
+    /**
+     * Validate json row
+     */
+    private function validateJsonRow($jsonRow)
+    {
+        return (
+            isset($jsonRow->order_id) &&
+            isset($jsonRow->order_date) &&
+            isset($jsonRow->customer) &&
+            isset($jsonRow->discounts) &&
+            isset($jsonRow->items)
+        );
+
     }
 
     /**

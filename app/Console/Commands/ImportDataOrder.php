@@ -14,7 +14,7 @@ class ImportDataOrder extends Command
      *
      * @var string
      */
-    protected $signature = 'item-order:generate-csv {--with-mail} {mails*}';
+    protected $signature = 'item-order:generate-csv {--with-mail} {mails?*}';
 
     /**
      * The console command description.
@@ -51,6 +51,11 @@ class ImportDataOrder extends Command
     {
         $withMail = $this->option('with-mail');
         $csvFile = $this->itemOrderService->generateCsv();
+
+        if (!$csvFile) {
+            $this->info('Sorry, there is an error : ' . $this->itemOrderService->getErrorMessage());
+            return 0;
+        }
 
         $this->info('Your csv has been saved in ' . $csvFile);
 

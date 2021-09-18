@@ -31,6 +31,10 @@ class ItemOrderController extends Controller
     public function generateCsv(ItemOrderServices $service)
     {
         $path = $service->generateCsv();
+        if (!$path) {
+            return redirect()->back()->with('error', $service->getErrorMessage());
+        }
+
         $csvFileName = $service->getCsvFilename();
         $addresses = $service->getCustomerAddresses();
         $status = 'success';
