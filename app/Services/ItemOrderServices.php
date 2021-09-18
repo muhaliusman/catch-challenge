@@ -99,6 +99,8 @@ class ItemOrderServices
             if (!$this->error) {
                 return $path;
             }
+
+            unlink($path);
         }
 
         return null;
@@ -112,6 +114,26 @@ class ItemOrderServices
     public function getCsvFilename()
     {
         return $this->csvFilename;
+    }
+
+    /**
+     * Geter full path csv
+     *
+     * @return string
+     */
+    public function getFullPathCsv()
+    {
+        return $this->fullPathCsv;
+    }
+
+    /**
+     * Geter full path csv
+     *
+     * @return string
+     */
+    public function getFullPathJson()
+    {
+        return $this->fullPath;
     }
 
     /**
