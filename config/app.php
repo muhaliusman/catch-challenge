@@ -231,6 +231,10 @@ return [
     /**
      * URL to download file order
      */
-    'file_order_url' => env('FILE_ORDER_URL', 'https://s3-ap-southeast-2.amazonaws.com/catch-code-challenge/challenge-1-in.jsonl')
+    'file_order_url' => env('FILE_ORDER_URL', 'https://s3-ap-southeast-2.amazonaws.com/catch-code-challenge/challenge-1-in.jsonl'),
 
+    /**
+     * Map key
+     */
+    'mapbox_key' => env('MAPBOX_KEY', 'pk.eyJ1IjoibXVoYWxpdXNtYW43MiIsImEiOiJja2l2ZWlsd3YxN20zMndtbW9ienZtYmlvIn0.NyzDq1LVAY-AK32KsFGa4w')
 ];
