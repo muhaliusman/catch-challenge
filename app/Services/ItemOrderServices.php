@@ -43,6 +43,11 @@ class ItemOrderServices
     protected $fullPathCsv;
 
     /**
+     * @var array
+     */
+    protected $customerAddresses = [];
+
+    /**
      * Constructor
      */
     public function __construct()
@@ -82,6 +87,26 @@ class ItemOrderServices
     }
 
     /**
+     * Geter csv filename
+     *
+     * @return string
+     */
+    public function getCsvFilename()
+    {
+        return $this->csvFilename;
+    }
+
+    /**
+     * Geter csv filename
+     *
+     * @return array
+     */
+    public function getCustomerAddresses()
+    {
+        return $this->customerAddresses;
+    }
+
+    /**
      * File generator
      *
      * @return mixed
@@ -107,6 +132,10 @@ class ItemOrderServices
                     'total_units_count' => $orderVal['total_units_count'],
                     'customer_state' => $jsonRow->customer->shipping_address->state
                 ]);
+
+                $this->customerAddresses[] = $jsonRow->customer->shipping_address->street . ', ' .
+                    $jsonRow->customer->shipping_address->suburb . ', ' .
+                    $jsonRow->customer->shipping_address->state;
 
                 yield $csvData;
             }
